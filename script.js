@@ -1,109 +1,56 @@
 const display = document.getElementById("display");
-const keys = document.querySelector(".keys");
-
-let previous = null;
-let operator = null;
-let clearOnNext = false;
-
-function add(a, b) {
-  return a + b;
+let a = "";
+let b = "";
+let op = "";
+let reset = false;
+function add(x, y) {
+  return x + y;
 }
-function substract(a, b) {
-  return a - b;
+function substract(x, y) {
+  return x - y;
 }
-function product(a, b) {
-  return a * b;
+function product(x, y) {
+  return x * y;
 }
-function division(a, b) {
-  return b === 0 ? NaN : a / b;
+function division(x, y) {
+  return y === 0 ? "Error" : x / y;
 }
-
-function setDisplay(text) {
-  display.value = text;
-}
-function getNumber() {
-  const text = display.value.trim();
-  return Number(text || "0");
-}
-
-function format(value) {
-  if (!Number.isFinite(value)) return "Error";
-  return String(Number(value.toFixed(10)));
-}
-
 function clear() {
-  previous = null;
-  operator = null;
-  clearOnNext = false;
-  setDisplay("0");
+  a = b = op = "";
+  display.value = "";
 }
-
-function inputDigit(d) {
-  if (clearOnNext || display.value === "0" || display.value === "Error") {
-    setDisplay(String(d));
-    clearOnNext = false;
-  } else {
-    setDisplay(display.value + String(d));
+document.querySelector(".keys").onclick = (e) => {
+  const t = e.target;
+  if (t.dataset.key) {
+    if (reset) {
+      clear();
+      reset = false;
+    }
+    if (!op) {
+      a += t.dataset.key;
+      display.value = a;
+    } else {
+      b += t.dataset.key;
+      display.value = b;
+    }
   }
-}
-
-function applyOperator(op, a, b) {
-  switch (op) {
-    case "+":
-      return add(a, b);
-    case "-":
-      return substract(a, b);
-    case "*":
-      return product(a, b);
-    case "/":
-      return division(a, b);
-    default:
-      return b;
+  if (t.dataset.op) {
+    if (a) op = t.dataset.op;
   }
-}
-
-function chooseOperator(op) {
-  const current = getNumber();
-  if (previous === null) {
-    previous = current;
-  } else if (operator) {
-    const result = applyOperator(operator, previous, current);
-    previous = result;
-    setDisplay(format(result));
+  if (t.dataset.action === "clear") {
+    clear();
   }
-  operator = op;
-  clearOnNext = true;
-}
-
-function equals() {
-  if (operator === null || previous === null) return;
-  const current = getNumber();
-  const result = applyOperator(operator, previous, current);
-  setDisplay(format(result));
-  previous = Number.isFinite(result) ? result : null;
-  operator = null;
-  clearOnNext = true;
-}
-
-keys.addEventListener("click", (e) => {
-  const button = e.target && e.target.closest("button");
-  if (!button) return;
-
-  const digit = button.getAttribute("data-key");
-  const op = button.getAttribute("data-op");
-  const action = button.getAttribute("data-action");
-
-  if (digit !== null) return inputDigit(digit);
-  if (op !== null) return chooseOperator(op);
-  if (action === "equals") return equals();
-  if (action === "clear") return clear();
-});
-
-window.addEventListener("keydown", (e) => {
-  if (e.key >= "0" && e.key <= "9") inputDigit(e.key);
-  if (["+", "-", "*", "/"].includes(e.key)) chooseOperator(e.key);
-  if (e.key === "Enter" || e.key === "=") equals();
-  if (e.key.toLowerCase() === "c") clear();
-});
-
-clear();
+  if (t.dataset.action === "equals") {
+    if (a && b && op) {
+      let x = Number(a),
+        y = Number(b),
+        r;
+      if (op === "+") r = add(x, y);
+      if (op === "-") r = substract(x, y);
+      if (op === "*") r = product(x, y);
+      if (op === "/") r = division(x, y);
+      display.value = r;
+      reset = true;
+    }
+  }
+};
